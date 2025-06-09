@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - travel_app
+      
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: travel_backend
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - SQLITE_DB_DIR=/app/data
+    networks:
+      - travel_app
+    
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: travel_frontend
+    restart: always
+    depends_on:
+      - backend
+      - ollama
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./schema_display.py:/app/schema_display.py
+      - ./data:/app/data
+    environment:
+      - API_URL=http://backend:8000
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - travel_app
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - travel_app
+    deploy:
+      resources:
+        reservations:
+          memory: 2G
+        limits:
+          memory: 8G
+
+networks:
+  travel_app:
+
+volumes:
+  mongodb_data:
+  ollama_data:
