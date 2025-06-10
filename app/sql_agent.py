@@ -383,7 +383,6 @@ def search_hotels_by_name(name):
         return []
 
 
-# 在 sql_agent.py 的最后添加：
 def answer_sql_question(q: str):
     """Very simple keyword-based natural language -> SQL logic"""
     q_lower = q.lower()
